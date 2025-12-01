@@ -1,0 +1,58 @@
+name: Publish Manifests
+
+on:
+  push:
+    branches: [main]
+    paths: ["k8s/**"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    name: Publish OCI Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Publish manifests
+        id: push
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::8}"
+          IMAGE_URL="oci://${{ secrets.ARTIFACT_REGISTRY_URL }}/manifests:${IMAGE_TAG}"
+
+          echo "Publishing to: ${IMAGE_URL}"
+
+          PUSH_OUTPUT=$(flux push artifact "${IMAGE_URL}" \
+            --path=./k8s \
+            --source="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --revision="${GITHUB_REF_NAME}@sha1:${GITHUB_SHA}" \
+            --json)
+
+          DIGEST=$(echo "${PUSH_OUTPUT}" | jq -r '.digest')
+          echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
+
+          flux tag artifact "${IMAGE_URL}" --tag latest
+
+          echo "Published successfully (${DIGEST})"
+
+      - name: Summary
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::8}"
+          DIGEST="${{ steps.push.outputs.digest }}"
+
+          echo "## OCI Artifact Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** \`${{ secrets.ARTIFACT_REGISTRY_URL }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:** \`${IMAGE_TAG}\`, \`latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Digest:** \`${DIGEST}\`" >> $GITHUB_STEP_SUMMARY
