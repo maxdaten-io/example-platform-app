@@ -2,8 +2,8 @@ name: Publish Manifests
 
 on:
   push:
-    branches: [main]
-    paths: ["k8s/**"]
+    branches: [ main ]
+    paths: [ "k8s/**" ]
   workflow_dispatch:
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
             --path=./k8s \
             --source="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
             --revision="${GITHUB_REF_NAME}@sha1:${GITHUB_SHA}" \
-            --json)
+            --output json)
 
           DIGEST=$(echo "${PUSH_OUTPUT}" | jq -r '.digest')
           echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
