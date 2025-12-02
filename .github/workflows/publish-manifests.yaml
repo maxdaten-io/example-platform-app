@@ -32,7 +32,7 @@ jobs:
         id: push
         run: |
           IMAGE_TAG="${GITHUB_SHA::8}"
-          IMAGE_URL="oci://${{ secrets.ARTIFACT_REGISTRY_URL }}/manifests:${IMAGE_TAG}"
+          IMAGE_URL="oci://${{ secrets.ARTIFACT_REGISTRY_URL }}/oci/manifests:${IMAGE_TAG}"
 
           echo "Publishing to: ${IMAGE_URL}"
 
