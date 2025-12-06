@@ -9,18 +9,42 @@ This repository demonstrates:
 - Kubernetes manifest structure for platform apps
 - OCI artifact publishing via GitHub Actions
 - Integration with the GitOps platform
+- External Secrets Operator (ESO) integration with GCP Secret Manager
 
 ## Structure
 
 ```
 k8s/
 ├── kustomization.yaml    # Root kustomization (required)
-├── deployment.yaml       # Example deployment
+├── deployment.yaml       # Example deployment with secret display
 ├── service.yaml          # Example service
-└── configmap.yaml        # Example configmap
+├── configmap.yaml        # Example configmap
+└── external-secret.yaml  # ESO ExternalSecret for GCP secrets
 ```
 
 The `k8s/` directory is published as an OCI artifact and automatically reconciled by Flux in the project namespace.
+
+## Secrets Integration
+
+This example demonstrates ESO integration with GCP Secret Manager:
+
+1. **ExternalSecret** (`external-secret.yaml`) fetches `demo-message` from GCP Secret Manager
+2. **Deployment** uses an initContainer to inject the secret into the served HTML
+3. **SecretStore** (`gcp-secrets`) is automatically created by the platform ResourceSet
+
+### Prerequisites
+
+Enable secrets for your app in `apps.yaml`:
+```yaml
+example-app:
+  enable_secrets: true  # Creates ESO SA + SecretStore
+```
+
+Create the secret in GCP:
+```bash
+gcloud secrets create demo-message --project=<project-id>
+echo -n "Hello from GCP!" | gcloud secrets versions add demo-message --data-file=-
+```
 
 ## How It Works
 
