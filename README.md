@@ -46,6 +46,27 @@ gcloud secrets create demo-message --project=<project-id>
 echo -n "Hello from GCP!" | gcloud secrets versions add demo-message --data-file=-
 ```
 
+## Resource Requirements
+
+Platform namespaces have ResourceQuotas enforced. All containers **must** specify both CPU and memory limits:
+
+```yaml
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m      # Required by ResourceQuota
+    memory: 64Mi   # Required by ResourceQuota
+```
+
+Without `limits.cpu` and `limits.memory`, pods will fail to schedule with:
+```
+failed quota: small-app-quota: must specify limits.cpu
+```
+
+See [Flux CD Workflow](https://github.com/maxdaten-io/gitops/blob/main/docs/agent/kubernetes-flux-workflow.md#resource-quotas) for quota limits.
+
 ## How It Works
 
 1. **GitHub Actions** publishes `k8s/` to Artifact Registry as an OCI artifact
