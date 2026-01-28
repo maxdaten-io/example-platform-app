@@ -1,17 +1,13 @@
 {
-  "plugins": {
-    "marketplaces": [
-      {
-        "name": "maxdaten-io-platform",
-        "source": "maxdaten-io/gitops"
+  "extraKnownMarketplaces": {
+    "maxdaten-io-platform": {
+      "source": {
+        "source": "github",
+        "repo": "maxdaten-io/gitops"
       }
-    ],
-    "installed": [
-      {
-        "name": "platform-consumer",
-        "marketplace": "maxdaten-io-platform",
-        "enabled": true
-      }
-    ]
+    }
+  },
+  "enabledPlugins": {
+    "platform-consumer@maxdaten-io-platform": true
   }
 }
